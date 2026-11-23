@@ -19,6 +19,7 @@ let running = false;
 let starting = false;
 let cameraError = null;
 let wakeLock = null;
+let fullscreenFailed = false;
 
 // ---------- 화면 ----------
 const standalone = () => navigator.standalone === true || matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches;
@@ -42,7 +43,8 @@ function exitFullscreen() {
   } catch { /* 무시 */ }
 }
 
-// 영상 칸, 띠, 흰 네모 자리를 지금 화면 크기에 맞춘다. 사진관이 쓸 수 있는 모양이면 true.
+// 영상 칸, 띠, 흰 네모 자리를 지금 화면 크기에 맞춘다.
+// landscape: 가로로 놓였는지, fits: 띠에 흰 네모가 들어갈 만큼 위아래가 남는지(사파리 주소 막대가 보이면 모자란다).
 function layout() {
   const W = window.innerWidth;
   const H = window.innerHeight;
@@ -61,7 +63,7 @@ function layout() {
     el.style.left = `${W * (0.025 + 0.03 * i) - size / 2}px`;
     el.style.top = `${H - band / 2 - size / 2}px`;
   });
-  return W > H && band > size * 1.2;
+  return { landscape: W > H, fits: W > H && band > size * 1.2 };
 }
 
 function showNotice(n) {
@@ -101,23 +103,25 @@ function cameraErrorNotice(err) {
 }
 
 function update() {
-  const fits = layout();
+  const { landscape, fits } = layout();
   const live = document.body.dataset.state === 'live';
   const full = coversScreen();
   const camOn = Boolean(stream?.active) && !cameraError;
   let notice = null;
   if (live) {
     if (cameraError) notice = cameraErrorNotice(cameraError);
-    else if (!fits) notice = { title: '가로로 돌려 주세요', text: '사진관은 아이패드를 가로로 놓았을 때만 화면을 받아요.' };
+    else if (!landscape) notice = { title: '가로로 돌려 주세요', text: '사진관은 아이패드를 가로로 놓았을 때만 화면을 받아요.' };
     else if (!full) {
+      const button = canFullscreen() && !fullscreenFailed;
       notice = {
         title: '전체 화면으로 바꿔 주세요',
-        text: canFullscreen()
-          ? '주소 막대가 보이면 사진관이 화면을 알아보지 못해요. 홈 화면에 추가해서 열어도 돼요.'
-          : '공유 단추에서 \'홈 화면에 추가\'를 누르고 홈 화면의 사진관 카메라로 열어 주세요.',
-        action: canFullscreen() ? { label: '전체 화면', run: enterFullscreen } : null,
+        text: button
+          ? '주소 막대가 보이면 사진관이 화면을 알아보지 못해요. 홈 화면에 추가해서 열면 늘 전체 화면이에요.'
+          : '공유 단추에서 \'홈 화면에 추가\'를 누르고 홈 화면에 생긴 사진관 카메라로 열어 주세요.',
+        action: button ? { label: '전체 화면', run: enterFullscreen } : null,
       };
-    } else if (!camOn) notice = { title: '카메라를 켜는 중', text: '잠시만 기다려 주세요.' };
+    } else if (!fits) notice = { title: '이 화면에서는 쓸 수 없어요', text: '아이패드 화면 위아래에 남는 자리가 너무 좁아요. 화면 나누기를 끄고 사진관 카메라만 띄워 주세요.' };
+    else if (!camOn) notice = { title: '카메라를 켜는 중', text: '잠시만 기다려 주세요.' };
   }
   showNotice(notice);
 
@@ -230,6 +234,10 @@ $('#flip').addEventListener('click', () => {
 for (const ev of ['resize', 'orientationchange']) window.addEventListener(ev, update);
 document.addEventListener('fullscreenchange', update);
 document.addEventListener('webkitfullscreenchange', update);
+// 전체 화면을 거절당하면 홈 화면에 추가하는 길을 알려 준다.
+for (const ev of ['fullscreenerror', 'webkitfullscreenerror']) {
+  document.addEventListener(ev, () => { fullscreenFailed = true; update(); });
+}
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible' || !running) return;
   keepAwake();
