@@ -13,8 +13,8 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css?v=2">
-  <script type="module" src="app.js?v=2"></script>
+  <link rel="stylesheet" href="style.css?v=3">
+  <script type="module" src="app.js?v=3"></script>
 </head>
 <body data-state="setup">
   <main class="live" aria-label="카메라 화면">
@@ -28,7 +28,6 @@
     <p class="band-status" id="status" role="status"></p>
     <div class="band-actions">
       <button type="button" id="flip">앞 카메라로</button>
-      <button type="button" id="full">전체 화면</button>
       <button type="button" id="stop">끄기</button>
     </div>
   </div>
@@ -42,10 +41,23 @@
   <section class="setup" id="setup" aria-labelledby="setup-title">
     <div class="sheet">
       <h1 id="setup-title">우정 사진관 카메라</h1>
-      <p class="lead">이 아이패드를 친구사랑 우정 사진관의 카메라로 씁니다. 이 페이지는 영상을 어디에도 보내지 않고 맥이 케이블로 화면을 받아 갑니다.</p>
+
+      <!-- 사파리로 열었을 때: 홈 화면에 추가하는 법. 사파리 단추가 사진에 찍히지 않게 웹 앱으로만 쓴다. -->
+      <div class="install">
+        <p class="lead">사파리 단추가 사진에 찍히지 않도록 먼저 이 페이지를 홈 화면에 추가해 주세요. 한 번만 하면 돼요.</p>
+        <ol class="how">
+          <li><span class="num">1</span><span><strong>공유 단추를 눌러요</strong>네모 위로 화살표가 나온 단추예요. 안 보이면 주소 막대의 ⋯ 단추 안에 있어요.</span></li>
+          <li><span class="num">2</span><span><strong>홈 화면에 추가해요</strong>'홈 화면에 추가'를 누르고 '추가'를 눌러요. '웹 앱으로 열기'가 보이면 켜 두세요.</span></li>
+          <li><span class="num">3</span><span><strong>홈 화면에서 열어요</strong>홈 화면에 생긴 '사진관 카메라'를 누르면 카메라를 켤 수 있어요.</span></li>
+        </ol>
+      </div>
+
+      <!-- 홈 화면 웹 앱으로 열었을 때 -->
+      <div class="ready">
+      <p class="lead">이 아이패드를 친구사랑 우정 사진관의 카메라로 써요. 이 페이지는 영상을 어디에도 보내지 않고 맥이 케이블로 화면을 받아 가요.</p>
       <ol class="how">
-        <li><span class="num">1</span><span><strong>가로로 세워요</strong>카메라가 친구들을 보도록 아이패드를 가로로 세워 둡니다.</span></li>
-        <li><span class="num">2</span><span><strong>케이블로 이어요</strong>맥스튜디오에 연결합니다. 처음 연결하면 아이패드에서 '신뢰'를 누릅니다.</span></li>
+        <li><span class="num">1</span><span><strong>가로로 세워요</strong>카메라가 친구들을 보도록 아이패드를 가로로 세워 두세요.</span></li>
+        <li><span class="num">2</span><span><strong>케이블로 이어요</strong>맥스튜디오에 연결해요. 처음 연결하면 아이패드에서 '신뢰'를 눌러요.</span></li>
         <li><span class="num">3</span><span><strong>카메라를 켜요</strong>아래 단추를 누르면 사진관 화면에 바로 보여요.</span></li>
       </ol>
       <div class="pick" role="radiogroup" aria-label="쓸 카메라">
@@ -54,6 +66,7 @@
       </div>
       <button type="button" class="btn btn-primary btn-xl" id="start">카메라 켜기</button>
       <p class="note" id="setup-note">알림이 사진관 화면에 비치지 않게 제어 센터에서 방해 금지 모드를 켜 두세요.</p>
+      </div>
     </div>
   </section>
 </body>

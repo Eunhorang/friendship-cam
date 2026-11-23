@@ -128,6 +128,10 @@ body[data-state="live"] .band { display: flex; }
   background: var(--crayon-blue);
 }
 body[data-state="live"] .setup { display: none; }
+/* 사파리로 열면 홈 화면에 추가하는 법만, 홈 화면 웹 앱으로 열면 카메라 켜기만 보인다. */
+.install { display: none; }
+body.browser .install { display: block; }
+body.browser .ready { display: none; }
 
 .sheet {
   isolation: isolate;
