@@ -1,0 +1,16 @@
+{
+  "name": "우정 사진관 카메라",
+  "short_name": "사진관 카메라",
+  "description": "친구사랑 우정 사진관에서 아이패드를 카메라로 쓰는 페이지",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
