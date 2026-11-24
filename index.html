@@ -13,8 +13,8 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-  <link rel="stylesheet" href="style.css?v=4">
-  <script type="module" src="app.js?v=4"></script>
+  <link rel="stylesheet" href="style.css?v=5">
+  <script type="module" src="app.js?v=5"></script>
 </head>
 <body data-state="setup">
   <main class="live" aria-label="카메라 화면">
@@ -35,6 +35,7 @@
   <div class="notice" id="notice" hidden>
     <p class="notice-title" id="notice-title"></p>
     <p class="notice-text" id="notice-text"></p>
+    <p class="notice-facts" id="facts"></p>
     <button type="button" class="btn btn-primary" id="notice-action" hidden></button>
   </div>
 
@@ -67,6 +68,7 @@
       <button type="button" class="btn btn-primary btn-xl" id="start">카메라 켜기</button>
       <p class="note" id="setup-note">알림이 사진관 화면에 비치지 않게 제어 센터에서 방해 금지 모드를 켜 두세요.</p>
       </div>
+      <p class="facts" id="setup-facts"></p>
     </div>
   </section>
 </body>

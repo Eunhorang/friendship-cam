@@ -15,6 +15,10 @@
   --box: 56.25vw;
   --top: 0px;
   --row: 4.5vw;
+  /* 안전 여백을 app.js가 읽을 수 있게 옮겨 둔다 */
+  --sat: env(safe-area-inset-top);
+  --sal: env(safe-area-inset-left);
+  --sab: env(safe-area-inset-bottom);
   color-scheme: dark;
 }
 
@@ -116,6 +120,9 @@ body[data-state="live"] .band { display: flex; }
 .notice-title { margin: 0 0 8px; font-family: var(--font-display); font-size: 30px; line-height: 1.25; }
 .notice-text { margin: 0; color: rgba(255, 255, 255, 0.82); font-size: 16px; line-height: 1.55; text-wrap: balance; }
 .notice .btn { margin-top: 20px; min-width: 220px; }
+.notice-facts:empty, .facts:empty { display: none; }
+.notice-facts { margin: 14px 0 0; color: rgba(255, 255, 255, 0.6); font-size: 13px; font-variant-numeric: tabular-nums; }
+.facts { margin: 12px 0 0; color: #8a94a8; font-size: 12px; text-align: center; font-variant-numeric: tabular-nums; }
 
 /* ---------- 처음 화면 ---------- */
 .setup {

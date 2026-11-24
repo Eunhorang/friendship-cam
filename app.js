@@ -63,9 +63,18 @@ function layout() {
   return { landscape: W > H, fits: W > H && W / H > 1.25 && spare > W * 0.06 && top >= W * 0.055 };
 }
 
+// 문제를 찾을 때 읽어 달라고 할 화면 숫자: 페이지가 받은 크기, 화면 크기, 배율, 안전 여백(위·왼쪽·아래).
+function screenFacts() {
+  const css = getComputedStyle(document.documentElement);
+  const inset = ['--sat', '--sal', '--sab'].map((v) => Math.round(parseFloat(css.getPropertyValue(v)) || 0)).join('·');
+  const vv = window.visualViewport;
+  return `페이지 ${innerWidth}×${innerHeight} · 보이는 곳 ${Math.round(vv?.width || 0)}×${Math.round(vv?.height || 0)} · 화면 ${screen.width}×${screen.height} · ${devicePixelRatio}배 · 여백 ${inset}`;
+}
+
 function showNotice(n) {
   const box = $('#notice');
   box.hidden = !n;
+  $('#facts').textContent = n?.facts ? screenFacts() : '';
   if (!n) return;
   $('#notice-title').textContent = n.title;
   $('#notice-text').textContent = n.text;
@@ -97,7 +106,7 @@ function update() {
   if (live) {
     if (cameraError) notice = cameraErrorNotice(cameraError);
     else if (!landscape) notice = { title: '가로로 돌려 주세요', text: '사진관은 아이패드를 가로로 놓았을 때만 화면을 받아요.' };
-    else if (!fits) notice = { title: '화면 나누기를 꺼 주세요', text: '사진관 카메라만 화면 가득 띄워야 맥이 알아봐요.' };
+    else if (!fits) notice = { title: '화면 나누기를 꺼 주세요', text: '사진관 카메라만 화면 가득 띄워야 맥이 알아봐요.', facts: true };
     else if (!camOn) notice = { title: '카메라를 켜는 중', text: '잠시만 기다려 주세요.' };
   }
   showNotice(notice);
@@ -219,3 +228,6 @@ if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWor
 
 markPick();
 update();
+// 처음 화면 맨 아래에 화면 숫자를 작게 둔다(문제가 생겼을 때 읽어 달라고 할 수 있게).
+$('#setup-facts').textContent = screenFacts();
+window.addEventListener('resize', () => { $('#setup-facts').textContent = screenFacts(); });
