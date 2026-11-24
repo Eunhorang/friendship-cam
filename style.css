@@ -11,8 +11,10 @@
   --line: #d3dae6;
   --font-display: 'Jua', 'Apple SD Gothic Neo', sans-serif;
   --font-ui: 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif;
-  /* app.js가 화면 크기에 맞춰 바꾼다: 영상 칸 높이, 위쪽 띠 높이, 표시 줄 높이 */
-  --box: 56.25vw;
+  /* app.js가 화면 크기에 맞춰 바꾼다: 영상 칸 자리와 크기, 표시 줄 높이 */
+  --box-x: 0px;
+  --box-w: 100vw;
+  --box-h: 56.25vw;
   --top: 0px;
   --row: 4.5vw;
   /* 안전 여백을 app.js가 읽을 수 있게 옮겨 둔다 */
@@ -45,13 +47,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible { outline: 3px solid var(--crayon-yellow); outline-offset: 2px; }
 
 /* ---------- 카메라 칸 ---------- */
-/* 위아래로 2px씩 넉넉히 덮어 맥이 자른 가장자리에 검은 줄이 남지 않게 한다. */
+/* 둘레로 2px씩 넉넉히 덮어 맥이 자른 가장자리에 검은 줄이 남지 않게 한다. */
 .live {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: calc(var(--box-x) - 2px);
+  width: calc(var(--box-w) + 4px);
   top: calc(var(--top) - 2px);
-  height: calc(var(--box) + 4px);
+  height: calc(var(--box-h) + 4px);
   display: none;
   background: #000;
 }
@@ -65,11 +67,11 @@ body[data-state="live"] .live { display: block; }
 body.marked .marks { display: block; }
 
 /* ---------- 위쪽 띠의 조작 줄 ---------- */
-/* 왼쪽 위 X 단추(약 80px)와 오른쪽 표시(가로 66.5%부터) 사이, 표시와 같은 높이에 둔다. */
+/* 왼쪽 위 X 단추(약 80px)와 오른쪽 표시(가로 54.5%부터) 사이, 표시와 같은 높이에 둔다. */
 .band {
   position: fixed;
   left: 100px;
-  right: 35vw;
+  right: 46.5vw;
   top: calc(var(--row) - 20px);
   height: 40px;
   display: none;

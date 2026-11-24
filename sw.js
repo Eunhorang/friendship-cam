@@ -1,11 +1,11 @@
 // 우정 사진관 카메라: 한 번 열어 두면 인터넷이 없어도 열리게 화면 파일을 담아 둔다.
 // 파일을 고치면 CACHE 숫자와 index.html의 ?v= 숫자를 함께 올린다.
-const CACHE = 'friendship-cam-6';
+const CACHE = 'friendship-cam-7';
 const FILES = [
   './',
   './index.html',
-  './style.css?v=6',
-  './app.js?v=6',
+  './style.css?v=7',
+  './app.js?v=7',
   './manifest.webmanifest',
   './icons/icon.svg',
   './icons/apple-touch-icon.png',

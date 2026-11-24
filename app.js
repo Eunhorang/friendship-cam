@@ -3,19 +3,22 @@
 // 이 페이지는 영상을 어디에도 보내지 않는다.
 //
 // 위쪽 검은 띠 오른쪽의 흰 네모 줄은 사진관 도우미가 '카메라 페이지가 제자리에 떠 있다'고 알아보는 표시다.
-// 사진관 tools/ipad-camera.swift와 같은 약속(표시 3판)이어야 한다. 가로를 W라 하면
-//   표시: 한 변 0.02W 칸 열한 개, i번째 칸 가운데 x = W × (0.675 + 0.03 i)
-//         1 0 1 1 0 1(맞춤) + g 네 자리(큰 자리부터) + 1의 개수를 홀수로 맞추는 한 칸
-//   영상 칸: 가로 W, 높이 W × 9/16, 위 끝 = 표시 줄 가운데 + W × (0.02 + 0.004 g)
-// 도우미가 표시 줄을 화면 위쪽에서 찾으므로, 아이패드가 이 페이지를 시계 줄 아래부터 그리든 화면 맨 위부터
-// 그리든 상관없다(2026-11-24 iPad mini 6 웹 앱에서 페이지 높이가 화면보다 작았다).
+// 사진관 tools/ipad-camera.swift와 같은 약속(표시 4판)이어야 한다. 가로를 W라 하면
+//   표시: 한 변 0.02W 칸 열다섯 개, i번째 칸 가운데 x = W × (0.555 + 0.03 i)
+//         1 0 1 1 0 1(맞춤) + g 네 자리 + s 네 자리(큰 자리부터) + 1의 개수를 홀수로 맞추는 한 칸
+//   영상 칸: 가로 W × (1 − 0.01 s), 가운데 정렬, 높이 = 가로 × 9/16, 위 끝 = 표시 줄 가운데 + W × (0.02 + 0.004 g)
+// 도우미가 표시 줄을 화면 위쪽에서 찾고 g, s를 읽으므로 배치는 이 페이지만 고치면 된다.
 //
-// 홈 화면에 추가한 웹 앱으로 열었을 때만 표시를 켠다. 사파리 전체 화면은 왼쪽 위 X 단추가 사라지지 않고
-// 사진에 찍힌다. 웹 앱에서도 같은 자리에 X 단추가 보일 때가 있어(위에서 약 78pt) 영상 칸을 그 아래로 내린다.
+// 2026-11-24 iPad mini 6 웹 앱에서 확인한 것: 페이지는 화면 맨 위부터 그려지지만 아래 약 30pt는 페이지 밖이다.
+// 맨 위 시계 줄 높이는 아이패드가 어둡게 덮어 흰 네모가 회색이 된다. 사파리 전체 화면과 웹 앱에서 왼쪽 위에
+// X 단추가 보일 때가 있다(위에서 약 78pt). 그래서 표시는 시계 줄 아래에, 영상 칸은 X 단추 아래에 두고,
+// 영상 칸이 페이지 아래 끝에 들어가지 않으면 가로를 1%씩 줄인다.
+// 홈 화면에 추가한 웹 앱으로 열었을 때만 표시를 켠다(사파리 전체 화면은 X 단추가 늘 남는다).
 const SYNC_BITS = [1, 0, 1, 1, 0, 1];
-const GAP_CODE = 3; // 표시 줄 가운데에서 영상 칸 위 끝까지 W × (0.02 + 0.004 × 3)
+const TOP_DIM = 52; // 맨 위에서 어둡게 덮이는 높이(CSS px): 표시를 이보다 아래에 둔다
 const CORNER_CLEAR = 84; // 영상 칸 위 끝의 최소 높이(CSS px): 왼쪽 위 X 단추 아래 끝 + 여유
-const MIN_BOTTOM = 16; // 아래 띠 최소 높이(CSS px): 홈 막대 자리
+const BOTTOM_GAP = 4; // 영상 칸 아래 여유(CSS px). 홈 막대가 페이지 안에 있으면 그 높이(안전 여백)만큼 더 비운다.
+const bitsOf = (n) => [8, 4, 2, 1].map((b) => (n & b ? 1 : 0));
 const FACING_LABEL = { environment: '뒤 카메라', user: '앞 카메라' };
 
 const $ = (s) => document.querySelector(s);
@@ -36,17 +39,26 @@ const webApp = () => navigator.standalone === true || matchMedia('(display-mode:
 function layout() {
   const W = window.innerWidth;
   const H = window.innerHeight;
-  const box = (W * 9) / 16;
-  // 영상 칸은 위아래 가운데가 기본이고, 위쪽이 X 단추 자리보다 좁으면 내린다. 아래 띠에는 홈 막대 자리를 남긴다.
-  const top = Math.min(H - MIN_BOTTOM - box, Math.max(CORNER_CLEAR, (H - box) / 2));
   const size = W * 0.02;
-  const row = top - W * (0.02 + 0.004 * GAP_CODE);
-  const gBits = [8, 4, 2, 1].map((b) => (GAP_CODE & b ? 1 : 0));
-  const parity = gBits.reduce((a, b) => a + b, 0) % 2 === 0 ? 1 : 0;
-  const bits = [...SYNC_BITS, ...gBits, parity];
+  const insetBottom = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--sab')) || 0;
+  const bottom = H - Math.max(BOTTOM_GAP, insetBottom);
+  const row = TOP_DIM + size / 2;
+  // g: 영상 칸 위 끝이 X 단추 아래로 오게 표시와 칸 사이를 벌린다.
+  let g = 0;
+  while (g < 15 && row + W * (0.02 + 0.004 * g) < CORNER_CLEAR) g += 1;
+  const top = row + W * (0.02 + 0.004 * g);
+  // s: 영상 칸이 페이지 아래 끝에 들어가도록 가로를 1%씩 줄인다.
+  let s = 0;
+  while (s < 15 && top + (W * (1 - 0.01 * s) * 9) / 16 > bottom) s += 1;
+  const boxW = W * (1 - 0.01 * s);
+  const boxH = (boxW * 9) / 16;
+  const parity = [...bitsOf(g), ...bitsOf(s)].reduce((a, b) => a + b, 0) % 2 === 0 ? 1 : 0;
+  const bits = [...SYNC_BITS, ...bitsOf(g), ...bitsOf(s), parity];
   const root = document.documentElement.style;
-  root.setProperty('--box', `${box}px`);
-  root.setProperty('--top', `${Math.max(0, top)}px`);
+  root.setProperty('--box-x', `${(W - boxW) / 2}px`);
+  root.setProperty('--box-w', `${boxW}px`);
+  root.setProperty('--box-h', `${boxH}px`);
+  root.setProperty('--top', `${top}px`);
   root.setProperty('--row', `${row}px`);
   const marks = $('#marks');
   if (marks.children.length !== bits.length) marks.replaceChildren(...bits.map(() => document.createElement('i')));
@@ -54,11 +66,11 @@ function layout() {
     el.className = bits[i] ? '' : 'off';
     el.style.width = `${size}px`;
     el.style.height = `${size}px`;
-    el.style.left = `${W * (0.675 + 0.03 * i) - size / 2}px`;
+    el.style.left = `${W * (0.555 + 0.03 * i) - size / 2}px`;
     el.style.top = `${row - size / 2}px`;
   });
   // 화면 나누기로 창이 좁아지면 가로라도 화면 전체가 아니다.
-  return { landscape: W > H, fits: W > H && W / H > 1.25 && row - size / 2 >= 0 && top + box <= H };
+  return { landscape: W > H, fits: W > H && W / H > 1.25 && top + boxH <= bottom };
 }
 
 // 문제를 찾을 때 읽어 달라고 할 화면 숫자: 페이지가 받은 크기, 화면 크기, 배율, 안전 여백(위·왼쪽·아래).
@@ -115,9 +127,7 @@ function update() {
   const track = stream?.getVideoTracks()[0];
   const s = track?.getSettings?.() || {};
   const size = s.width && s.height ? ` · ${s.width}×${s.height}` : '';
-  $('#status').textContent = marked
-    ? `${FACING_LABEL[prefs.facing]}${size} · 케이블로 이으면 사진관에 보여요`
-    : `${FACING_LABEL[prefs.facing]}${size}`;
+  $('#status').textContent = `${FACING_LABEL[prefs.facing]}${size}`;
   $('#flip').textContent = prefs.facing === 'user' ? '뒤 카메라로' : '앞 카메라로';
 }
 
