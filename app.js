@@ -2,15 +2,19 @@
 // 맥(친구사랑 우정 사진관)은 케이블로 이 화면을 받아 가운데 16:9만 잘라 카메라로 쓴다.
 // 이 페이지는 영상을 어디에도 보내지 않는다.
 //
-// 아래 검은 띠의 흰 네모(1 0 1 1 0 1)는 사진관 도우미가 '카메라 페이지가 제자리에 떠 있다'고 알아보는 표시다.
-// 사진관 tools/ipad-camera.swift와 같은 약속이어야 한다. 가로 W, 세로 H인 화면에서
-//   영상 칸 높이 = W × 9/16(위아래 가운데), 띠 높이 b = (H − W × 9/16) / 2
-//   아래 띠 가운데(y = H − b/2)에 한 변 0.02W 칸 여섯 개, i번째 칸 가운데 x = W × (0.025 + 0.03 i)
+// 위쪽 검은 띠 오른쪽의 흰 네모는 사진관 도우미가 '카메라 페이지가 제자리에 떠 있다'고 알아보는 표시다.
+// 사진관 tools/ipad-camera.swift와 같은 약속(표시 2판)이어야 한다. 가로 W, 세로 H인 화면에서
+//   영상 칸: 가로 W, 높이 h = W × 9/16. 남는 높이 S = H − h 가운데 위쪽 띠가 t = S × k / 16 (k = 0~15)
+//   위쪽 띠의 y = 0.045W 줄에 한 변 0.02W 칸 열한 개, i번째 칸 가운데 x = W × (0.675 + 0.03 i)
+//   앞 여섯 칸은 1 0 1 1 0 1, 다음 네 칸은 k(큰 자리부터), 마지막 칸은 1의 개수를 홀수로 맞춘다.
+// k를 표시에 담아 두었으므로 칸 위치는 이 페이지만 고쳐도 된다.
 //
-// 홈 화면에 추가한 웹 앱으로 열었을 때만 표시를 켠다. 사파리의 전체 화면은 왼쪽 위 닫기 단추(X)가
-// 사라지지 않고 영상 칸까지 내려와 사진에 찍힌다(2026-11-24 iPad mini 6에서 확인). 웹 앱에서는 맨 위
-// 시계·배터리 줄만 남는데, 그 줄은 위쪽 띠 안에 들어가 맥이 잘라 낸다.
-const MARK_BITS = [1, 0, 1, 1, 0, 1];
+// 홈 화면에 추가한 웹 앱으로 열었을 때만 표시를 켠다. 사파리 전체 화면은 주소 막대 대신 왼쪽 위 X 단추가
+// 남는다. 이 X 단추는 웹 앱에서도 늘 떠 있다(2026-11-24 iPad mini 6, 위에서 약 78pt). 그래서 위쪽 띠가
+// X 단추를 덮을 만큼 영상 칸을 내린다. 맨 위 시계·배터리 줄과 아래 홈 막대도 띠 안에 들어가 맥이 잘라 낸다.
+const SYNC_BITS = [1, 0, 1, 1, 0, 1];
+const CORNER_CLEAR = 84; // 위쪽 띠가 덮어야 하는 높이(CSS px): 왼쪽 위 X 단추 아래 끝 + 여유
+const MIN_BOTTOM = 16; // 아래 띠 최소 높이(CSS px): 홈 막대 자리
 const FACING_LABEL = { environment: '뒤 카메라', user: '앞 카메라' };
 
 const $ = (s) => document.querySelector(s);
@@ -27,27 +31,36 @@ const webApp = () => navigator.standalone === true || matchMedia('(display-mode:
 
 // ---------- 화면 ----------
 // 영상 칸, 띠, 흰 네모 자리를 지금 화면 크기에 맞춘다.
-// landscape: 가로로 놓였는지, fits: 위아래 띠에 흰 네모가 들어갈 만큼 자리가 남는지.
+// landscape: 가로로 놓였는지, fits: 띠와 표시가 약속대로 들어가는지.
 function layout() {
   const W = window.innerWidth;
   const H = window.innerHeight;
   const box = (W * 9) / 16;
-  const band = (H - box) / 2;
+  const spare = H - box;
+  // 위쪽 띠가 X 단추를 덮을 만큼 영상 칸을 내리되 아래 띠에 홈 막대 자리를 남긴다.
+  let k = Math.min(15, Math.max(0, Math.ceil((CORNER_CLEAR / spare) * 16)));
+  while (k > 0 && spare - (spare * k) / 16 < MIN_BOTTOM) k -= 1;
+  const top = (spare * k) / 16;
   const size = W * 0.02;
+  const row = W * 0.045;
+  const kBits = [8, 4, 2, 1].map((b) => (k & b ? 1 : 0));
+  const parity = kBits.reduce((a, b) => a + b, 0) % 2 === 0 ? 1 : 0;
+  const bits = [...SYNC_BITS, ...kBits, parity];
   const root = document.documentElement.style;
   root.setProperty('--box', `${box}px`);
-  root.setProperty('--band', `${Math.max(0, band)}px`);
+  root.setProperty('--top', `${Math.max(0, top)}px`);
+  root.setProperty('--row', `${row}px`);
   const marks = $('#marks');
-  if (marks.children.length !== MARK_BITS.length) marks.replaceChildren(...MARK_BITS.map(() => document.createElement('i')));
+  if (marks.children.length !== bits.length) marks.replaceChildren(...bits.map(() => document.createElement('i')));
   [...marks.children].forEach((el, i) => {
-    el.className = MARK_BITS[i] ? '' : 'off';
+    el.className = bits[i] ? '' : 'off';
     el.style.width = `${size}px`;
     el.style.height = `${size}px`;
-    el.style.left = `${W * (0.025 + 0.03 * i) - size / 2}px`;
-    el.style.top = `${H - band / 2 - size / 2}px`;
+    el.style.left = `${W * (0.675 + 0.03 * i) - size / 2}px`;
+    el.style.top = `${row - size / 2}px`;
   });
   // 화면 나누기로 창이 좁아지면 가로라도 화면 전체가 아니다.
-  return { landscape: W > H, fits: W > H && W / H > 1.25 && band > size * 1.2 };
+  return { landscape: W > H, fits: W > H && W / H > 1.25 && spare > W * 0.06 && top >= W * 0.055 };
 }
 
 function showNotice(n) {

@@ -11,9 +11,10 @@
   --line: #d3dae6;
   --font-display: 'Jua', 'Apple SD Gothic Neo', sans-serif;
   --font-ui: 'Pretendard', 'Apple SD Gothic Neo', system-ui, sans-serif;
-  /* app.js가 화면 크기에 맞춰 바꾼다 */
+  /* app.js가 화면 크기에 맞춰 바꾼다: 영상 칸 높이, 위쪽 띠 높이, 표시 줄 높이 */
   --box: 56.25vw;
-  --band: 0px;
+  --top: 0px;
+  --row: 4.5vw;
   color-scheme: dark;
 }
 
@@ -45,7 +46,7 @@ button:focus-visible { outline: 3px solid var(--crayon-yellow); outline-offset: 
   position: fixed;
   left: 0;
   right: 0;
-  top: calc(var(--band) - 2px);
+  top: calc(var(--top) - 2px);
   height: calc(var(--box) + 4px);
   display: none;
   background: #000;
@@ -59,19 +60,19 @@ body[data-state="live"] .live { display: block; }
 .marks i.off { background: transparent; }
 body.marked .marks { display: block; }
 
-/* ---------- 아래 띠 ---------- */
+/* ---------- 위쪽 띠의 조작 줄 ---------- */
+/* 왼쪽 위 X 단추(약 80px)와 오른쪽 표시(가로 66.5%부터) 사이, 표시와 같은 높이에 둔다. */
 .band {
   position: fixed;
-  left: 0;
-  right: 0;
-  height: var(--band);
+  left: 100px;
+  right: 35vw;
+  top: calc(var(--row) - 20px);
+  height: 40px;
   display: none;
   align-items: center;
   gap: 12px;
-  padding: 0 max(14px, env(safe-area-inset-right)) 0 22vw;
 }
 body[data-state="live"] .band { display: flex; }
-.band-bottom { bottom: 0; }
 .band-status {
   flex: 1;
   min-width: 0;
@@ -85,8 +86,7 @@ body[data-state="live"] .band { display: flex; }
 }
 .band-actions { display: flex; gap: 8px; }
 .band-actions button {
-  height: min(40px, calc(var(--band) - 10px));
-  min-height: 30px;
+  height: 36px;
   padding: 0 14px;
   border: 1.5px solid rgba(255, 255, 255, 0.5);
   border-radius: 10px;
